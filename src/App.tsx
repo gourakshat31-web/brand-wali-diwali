@@ -175,8 +175,99 @@ function Wheel({
   rotation: number;
   spinning: boolean;
 }) {
-  const count = categories.length;
-  const sliceAngle = count > 0 ? 360 / count : 360;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const size = 320;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
+
+    const count = categories.length;
+    const sliceAngle = (2 * Math.PI) / count;
+    const centerX = 160;
+    const centerY = 160;
+    const radius = 148;
+
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
+
+    // 1. Outer rim
+    ctx.beginPath();
+    ctx.arc(0, 0, 155, 0, 2 * Math.PI);
+    ctx.fillStyle = "#FFCF49";
+    ctx.fill();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#720019";
+    ctx.stroke();
+
+    // 2. Slices
+    for (let i = 0; i < count; i++) {
+      const startAngle = i * sliceAngle;
+      const endAngle = startAngle + sliceAngle;
+      const sliceColor = PALETTE[i % PALETTE.length];
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = sliceColor;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#720019";
+      ctx.stroke();
+
+      // Text along radius
+      ctx.save();
+      const midAngle = startAngle + sliceAngle / 2;
+      ctx.rotate(midAngle);
+
+      const isDark = sliceColor === "#FFF6CE" || sliceColor === "#FFC21C";
+      ctx.fillStyle = isDark ? "#720019" : "#FFFFFF";
+      ctx.font = count > 6 ? "700 11px 'Poppins', sans-serif" : "700 13px 'Poppins', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const words = categories[i].split(" ");
+      const textRadius = count > 6 ? 96 : 90;
+      if (words.length > 1) {
+        ctx.fillText(words[0], textRadius, -7);
+        ctx.fillText(words.slice(1).join(" "), textRadius, 8);
+      } else {
+        ctx.fillText(words[0], textRadius, 0);
+      }
+      ctx.restore();
+    }
+
+    // 3. Center Hub Outer
+    ctx.beginPath();
+    ctx.arc(0, 0, 52, 0, 2 * Math.PI);
+    ctx.fillStyle = "#FFCF49";
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#720019";
+    ctx.stroke();
+
+    // 4. Center Hub Inner
+    ctx.beginPath();
+    ctx.arc(0, 0, 44, 0, 2 * Math.PI);
+    ctx.fillStyle = "#FF800A";
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#FFF6CE";
+    ctx.stroke();
+
+    ctx.restore();
+  }, [categories, rotation]);
 
   return (
     <div className={`wheel-wrap ${spinning ? "is-spinning" : ""}`}>
@@ -190,64 +281,11 @@ function Wheel({
       <div className="pointer" aria-hidden="true">
         <span />
       </div>
-      <svg
+      <canvas
+        ref={canvasRef}
+        style={{ width: "320px", height: "320px", display: "block" }}
         className="wheel"
-        viewBox="0 0 320 320"
-        role="img"
-        aria-label="Product category wheel"
-      >
-        <g
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transformOrigin: "160px 160px",
-            transition: spinning
-              ? "transform 5s cubic-bezier(0.12, 0.85, 0.15, 1)"
-              : "none",
-          }}
-        >
-        <circle cx="160" cy="160" r="157" className="wheel-rim" />
-        {categories.map((category, index) => {
-          const startAngle = index * sliceAngle;
-          const endAngle = startAngle + sliceAngle;
-          const midAngle = startAngle + sliceAngle / 2;
-          const labelPoint = pointOnCircle(midAngle, count > 6 ? 96 : 90);
-          const words = category.split(" ");
-          const sliceColor = PALETTE[index % PALETTE.length];
-          const isDarkText = sliceColor === "#FFF6CE" || sliceColor === "#FFC21C";
-
-          return (
-            <g key={`${category}-${index}`}>
-              <path
-                d={makeSlice(startAngle, endAngle)}
-                fill={sliceColor}
-                className="wheel-slice"
-              />
-              <text
-                x={labelPoint.x}
-                y={labelPoint.y - (words.length > 1 ? (count > 6 ? 6 : 8) : 0)}
-                fill={isDarkText ? "#720019" : "#FFFFFF"}
-                textAnchor="middle"
-                transform={`rotate(${midAngle} ${labelPoint.x} ${labelPoint.y})`}
-                className="wheel-label"
-                style={{ fontSize: count > 6 ? "10px" : "12px", fontWeight: 700 }}
-              >
-                {words.map((word, wordIndex) => (
-                  <tspan
-                    key={word}
-                    x={labelPoint.x}
-                    dy={wordIndex === 0 ? 0 : count > 6 ? 12 : 14}
-                  >
-                    {word}
-                  </tspan>
-                ))}
-              </text>
-            </g>
-          );
-        })}
-        <circle cx="160" cy="160" r="53" className="wheel-hub-outer" />
-        <circle cx="160" cy="160" r="45" className="wheel-hub" />
-        </g>
-      </svg>
+      />
     </div>
   );
 }
@@ -466,58 +504,61 @@ export default function App() {
     }
 
     const count = currentCats.length;
-    const sliceAngle = 360 / count;
-    // The center angle of the winning slice (clockwise from 12 o'clock)
+    const sliceAngle = (2 * Math.PI) / count;
+    // The center angle of the winning slice in canvas coordinates
     const targetSliceCenter = targetIndex * sliceAngle + sliceAngle / 2;
 
-    // Pointer is at 12 o'clock (0 deg).
-    // To bring targetSliceCenter to 0 deg clockwise:
-    const targetModulo = ((360 - (targetSliceCenter % 360)) % 360 + 360) % 360;
-    const currentModulo = ((rotation % 360) + 360) % 360;
-
-    let forwardAngle = targetModulo - currentModulo;
-    if (forwardAngle <= 0) {
-      forwardAngle += 360;
+    // Pointer is at the TOP: in canvas coordinates, TOP is -Math.PI / 2
+    let targetModulo = (-Math.PI / 2 - targetSliceCenter) % (2 * Math.PI);
+    if (targetModulo < 0) {
+      targetModulo += 2 * Math.PI;
     }
 
-    // Fast start, long ease-out: 7 full turns (2520 deg) + exact forward distance
-    const finalRotation = rotation + (360 * 7) + forwardAngle;
+    const currentModulo = ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    let forwardAngle = targetModulo - currentModulo;
+    if (forwardAngle <= 0) {
+      forwardAngle += 2 * Math.PI;
+    }
 
-    setRotation(finalRotation);
+    // 7 full turns + exact forward distance
+    const startRotation = rotation;
+    const finalRotation = rotation + (2 * Math.PI * 7) + forwardAngle;
 
-    // Synchronize ticking sound with 5-second rotation
     const startTimestamp = performance.now();
     const duration = 5000;
     let lastSliceTick = -1;
 
-    // Cubic-bezier(0.12, 0.85, 0.15, 1) approximation
+    // Quartic ease-out: starts very fast, long gradual deceleration
     const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
 
-    const tickInterval = () => {
-      if (!spinningRef.current) return;
+    const animate = () => {
       const elapsed = performance.now() - startTimestamp;
       const progress = Math.min(1, elapsed / duration);
       const easedProgress = easeOut(progress);
-      const curDeg = rotation + (finalRotation - rotation) * easedProgress;
+      const curRot = startRotation + (finalRotation - startRotation) * easedProgress;
 
-      const currentSlice = Math.floor(curDeg / sliceAngle);
+      setRotation(curRot);
+
+      // Slice crossing pointer at top (-Math.PI / 2)
+      const angleAtPointer =
+        ((-Math.PI / 2 - curRot) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      const currentSlice = Math.floor(angleAtPointer / sliceAngle);
       if (currentSlice !== lastSliceTick) {
         sound.playTick();
         lastSliceTick = currentSlice;
       }
 
       if (progress < 1) {
-        requestAnimationFrame(tickInterval);
+        requestAnimationFrame(animate);
+      } else {
+        setRotation(finalRotation);
+        spinningRef.current = false;
+        setSelectedCategory(wonCategory);
+        setScreen("result");
       }
     };
-    requestAnimationFrame(tickInterval);
 
-    // Completion after 5 seconds: show result popup without shifting wheel slices
-    window.setTimeout(() => {
-      spinningRef.current = false;
-      setSelectedCategory(wonCategory);
-      setScreen("result");
-    }, 5000);
+    requestAnimationFrame(animate);
   }
 
   function resetLogin() {
