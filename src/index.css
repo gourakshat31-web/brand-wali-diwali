@@ -57,7 +57,7 @@ button:focus-visible, input:focus-visible { outline: 4px solid #ff800a; outline-
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: clamp(24px, 7vw, 42px);
   line-height: .88;
   white-space: nowrap;
   max-width: 95%;
@@ -76,13 +76,17 @@ button:focus-visible, input:focus-visible { outline: 4px solid #ff800a; outline-
 
 .title-lockup b {
   position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-8deg);
   z-index: 2;
   color: #e31e4b;
   font-size: clamp(14px, 4.2vw, 24px);
   font-weight: 800;
   -webkit-text-stroke: 1px #fff6ce;
-  transform: rotate(-8deg);
   text-shadow: 2px 2px 0 #720019;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .battle-stamp, .mini-stamp {
@@ -288,9 +292,9 @@ footer span { opacity: .55; margin: 0 3px; }
 @media (max-width: 520px) {
   .hero { padding-top: 14px; }
   .hero-band { width: 106%; padding: 12px 4px 15px; margin-left: -3%; }
-  .title-lockup { gap: 12px; }
-  .title-lockup span { font-size: clamp(34px, 11vw, 52px); -webkit-text-stroke-width: 2px; }
-  .title-lockup b { font-size: clamp(21px, 7vw, 32px); }
+  .title-lockup { gap: clamp(22px, 6.5vw, 36px); }
+  .title-lockup span { font-size: clamp(18px, 5.2vw, 30px); -webkit-text-stroke-width: 1.5px; }
+  .title-lockup b { font-size: clamp(14px, 4.2vw, 22px); }
   .battle-stamp { margin-top: 10px; }
   .game { margin-top: 17px; padding-inline: 14px; }
   .wheel-stage { width: min(88vw, 380px); }
@@ -302,8 +306,9 @@ footer span { opacity: .55; margin: 0 3px; }
   .marquee-shell { width: 100%; padding: 8px; border-width: 4px; border-radius: 23px; }
   .marquee-card { padding: 22px; }
   .modal-lockup { margin: -23px -23px 0; }
-  .modal-lockup .title-lockup span { font-size: clamp(25px, 9vw, 36px); }
-  .modal-lockup .title-lockup b { font-size: clamp(18px, 6vw, 24px); }
+  .modal-lockup .title-lockup { gap: clamp(20px, 6vw, 32px); }
+  .modal-lockup .title-lockup span { font-size: clamp(17px, 5vw, 26px); }
+  .modal-lockup .title-lockup b { font-size: clamp(13px, 3.8vw, 20px); }
 }
 
 @media (max-height: 720px) {
@@ -311,8 +316,9 @@ footer span { opacity: .55; margin: 0 3px; }
   .login-modal { border-radius: 21px; padding: 7px; }
   .login-modal .marquee-card { padding: 15px 18px 17px; border-radius: 13px; }
   .login-modal .modal-lockup { margin: -16px -19px 0; padding: 13px 8px 10px; border-radius: 11px 11px 0 0; }
-  .login-modal .title-lockup span { font-size: clamp(23px, 8vw, 32px); }
-  .login-modal .title-lockup b { font-size: clamp(17px, 5.5vw, 21px); }
+  .login-modal .title-lockup { gap: clamp(18px, 5vw, 28px); }
+  .login-modal .title-lockup span { font-size: clamp(16px, 4.8vw, 24px); }
+  .login-modal .title-lockup b { font-size: clamp(12px, 3.5vw, 18px); }
   .login-modal .mini-stamp { margin-bottom: 8px; padding: 3px 9px; font-size: 8px; }
   .login-intro { margin: 9px auto 10px; font-size: 10px; line-height: 1.35; }
   .field-label { margin-top: 7px; margin-bottom: 3px; font-size: 8px; }
