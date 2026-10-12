@@ -17,18 +17,18 @@ function initSheet() {
   if (!teamsSheet) teamsSheet = ss.insertSheet("Teams");
   teamsSheet.clear();
   const teamsData = [
-    ["Team No", "Captain Name", "Code"],
-    [1, "Aarav Sharma", "4821"],
-    [2, "Diya Patel", "7394"],
-    [3, "Rohan Verma", "2158"],
-    [4, "Ananya Iyer", "6043"],
-    [5, "Kabir Mehta", "9512"],
-    [6, "Priya Nair", "3876"],
-    [7, "Siddharth Rao", "1429"],
-    [8, "Tanya Kapoor", "8265"]
+    ["Team No", "Captain Name", "Code", "Allocated Category"],
+    [1, "Aarav Sharma", "4821", ""],
+    [2, "Diya Patel", "7394", ""],
+    [3, "Rohan Verma", "2158", ""],
+    [4, "Ananya Iyer", "6043", ""],
+    [5, "Kabir Mehta", "9512", ""],
+    [6, "Priya Nair", "3876", ""],
+    [7, "Siddharth Rao", "1429", ""],
+    [8, "Tanya Kapoor", "8265", ""]
   ];
-  teamsSheet.getRange(1, 1, teamsData.length, 3).setValues(teamsData);
-  formatHeader(teamsSheet.getRange(1, 1, 1, 3), headerBg, headerColor);
+  teamsSheet.getRange(1, 1, teamsData.length, 4).setValues(teamsData);
+  formatHeader(teamsSheet.getRange(1, 1, 1, 4), headerBg, headerColor);
 
   // 2. Categories tab
   let catSheet = ss.getSheetByName("Categories");
@@ -242,6 +242,18 @@ function handleSpin(team, name, code) {
     const allocSheet = ss.getSheetByName("Allocations");
     allocSheet.appendRow([new Date(), Number(team), chosenCategory]);
 
+    // Also update the Allocated Category column directly in the Teams sheet
+    const teamsSheet = ss.getSheetByName("Teams");
+    if (teamsSheet && teamsSheet.getLastRow() > 1) {
+      const tData = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 1).getValues();
+      for (let r = 0; r < tData.length; r++) {
+        if (String(tData[r][0]).trim() === team) {
+          teamsSheet.getRange(r + 2, 4).setValue(chosenCategory);
+          break;
+        }
+      }
+    }
+
     return {
       success: true,
       category: chosenCategory,
@@ -261,6 +273,10 @@ function resetAllocations() {
   const attSheet = ss.getSheetByName("Attempts");
   if (attSheet && attSheet.getLastRow() > 1) {
     attSheet.getRange(2, 1, attSheet.getLastRow() - 1, attSheet.getLastColumn()).clearContent();
+  }
+  const teamsSheet = ss.getSheetByName("Teams");
+  if (teamsSheet && teamsSheet.getLastRow() > 1) {
+    teamsSheet.getRange(2, 4, teamsSheet.getLastRow() - 1, 1).clearContent();
   }
   return "Allocations and Attempts have been cleared.";
 }

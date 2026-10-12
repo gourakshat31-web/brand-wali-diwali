@@ -193,15 +193,18 @@ function Wheel({
       <svg
         className="wheel"
         viewBox="0 0 320 320"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          transition: spinning
-            ? "transform 5s cubic-bezier(0.12, 0.85, 0.15, 1)"
-            : "none",
-        }}
         role="img"
         aria-label="Product category wheel"
       >
+        <g
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            transformOrigin: "160px 160px",
+            transition: spinning
+              ? "transform 5s cubic-bezier(0.12, 0.85, 0.15, 1)"
+              : "none",
+          }}
+        >
         <circle cx="160" cy="160" r="157" className="wheel-rim" />
         {categories.map((category, index) => {
           const startAngle = index * sliceAngle;
@@ -243,6 +246,7 @@ function Wheel({
         })}
         <circle cx="160" cy="160" r="53" className="wheel-hub-outer" />
         <circle cx="160" cy="160" r="45" className="wheel-hub" />
+        </g>
       </svg>
     </div>
   );
@@ -450,7 +454,9 @@ export default function App() {
 
     const wonCategory = spinRes.category!;
     const currentCats = [...activeCategories];
-    let targetIndex = currentCats.indexOf(wonCategory);
+    let targetIndex = currentCats.findIndex(
+      (c) => c.trim().toLowerCase() === wonCategory.trim().toLowerCase()
+    );
 
     // If for any reason wonCategory is not in activeCategories, add it
     if (targetIndex === -1) {
@@ -461,15 +467,21 @@ export default function App() {
 
     const count = currentCats.length;
     const sliceAngle = 360 / count;
+    // The center angle of the winning slice (clockwise from 12 o'clock)
     const targetSliceCenter = targetIndex * sliceAngle + sliceAngle / 2;
 
-    // Pointer is at top (0 deg). To place targetSliceCenter at top clockwise:
-    const targetAngle = (360 - (targetSliceCenter % 360)) % 360;
+    // Pointer is at 12 o'clock (0 deg).
+    // To bring targetSliceCenter to 0 deg clockwise:
+    const targetModulo = ((360 - (targetSliceCenter % 360)) % 360 + 360) % 360;
+    const currentModulo = ((rotation % 360) + 360) % 360;
 
-    // Fast start, long ease-out: 7 full turns (2520 deg) + offset
-    const currentBase = Math.floor(rotation / 360) * 360;
-    const diff = (targetAngle - (rotation % 360) + 360) % 360;
-    const finalRotation = currentBase + 2520 + diff;
+    let forwardAngle = targetModulo - currentModulo;
+    if (forwardAngle <= 0) {
+      forwardAngle += 360;
+    }
+
+    // Fast start, long ease-out: 7 full turns (2520 deg) + exact forward distance
+    const finalRotation = rotation + (360 * 7) + forwardAngle;
 
     setRotation(finalRotation);
 
@@ -500,13 +512,10 @@ export default function App() {
     };
     requestAnimationFrame(tickInterval);
 
-    // Completion after 5 seconds
+    // Completion after 5 seconds: show result popup without shifting wheel slices
     window.setTimeout(() => {
       spinningRef.current = false;
       setSelectedCategory(wonCategory);
-      // Remove won category from local wheel display
-      const updated = currentCats.filter((c) => c !== wonCategory);
-      setActiveCategories(updated);
       setScreen("result");
     }, 5000);
   }
