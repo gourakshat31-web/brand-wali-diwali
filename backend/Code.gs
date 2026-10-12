@@ -201,7 +201,7 @@ function handleStatus(team, name, code) {
 function handleSpin(team, name, code) {
   const lock = LockService.getScriptLock();
   try {
-    const acquired = lock.waitLock(10000);
+    const acquired = lock.tryLock(10000);
     if (!acquired) {
       return { success: false, error: "Server busy. Please try spinning again in a moment." };
     }
