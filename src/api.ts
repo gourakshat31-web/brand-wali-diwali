@@ -140,3 +140,21 @@ export async function apiSpin(team: number, name: string, code: string): Promise
     return await getRes.json();
   }
 }
+
+export async function apiReset(): Promise<{ success: boolean; message: string }> {
+  if (!APPS_SCRIPT_URL) {
+    localStorage.removeItem(MOCK_STORAGE_KEY);
+    return { success: true, message: "Local mock storage reset successfully." };
+  }
+
+  try {
+    const url = new URL(APPS_SCRIPT_URL);
+    url.searchParams.set("action", "reset");
+    url.searchParams.set("_t", String(Date.now()));
+    const res = await fetch(url.toString());
+    const data = await res.json();
+    return { success: true, message: data.message || "Reset successful" };
+  } catch (e) {
+    return { success: false, message: "Reset request failed" };
+  }
+}

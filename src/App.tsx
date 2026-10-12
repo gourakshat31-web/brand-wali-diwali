@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { apiLogin, apiSpin, apiStatus } from "./api";
+import { useEffect, useRef, useState } from "react";
+import { apiLogin, apiReset, apiSpin, apiStatus } from "./api";
 import { DEFAULT_CATEGORIES, PALETTE, TOTAL_TEAMS } from "./config";
 
 type Screen = "login" | "wheel" | "spinning" | "result" | "already" | "locked" | "error";
@@ -283,7 +283,7 @@ function Wheel({
       </div>
       <canvas
         ref={canvasRef}
-        style={{ width: "320px", height: "320px", display: "block" }}
+        style={{ width: "100%", height: "100%", display: "block" }}
         className="wheel"
       />
     </div>
@@ -325,6 +325,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [activeCategories, setActiveCategories] = useState<string[]>(DEFAULT_CATEGORIES);
   const [muted, setMuted] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const authRef = useRef<AuthSession | null>(null);
   const spinningRef = useRef(false);
@@ -571,6 +572,25 @@ export default function App() {
     setErrorMessage("");
   }
 
+  async function handleAdminReset() {
+    if (!window.confirm("⚠️ This will clear ALL spin allocations and attempts from the Google Sheet and reset the wheel to all 8 categories. Proceed?")) return;
+    setResetting(true);
+    try {
+      const result = await apiReset();
+      if (result.success) {
+        setActiveCategories(DEFAULT_CATEGORIES);
+        setRotation(0);
+        alert("✅ Reset complete! All categories are back in the wheel.");
+      } else {
+        alert("❌ Reset failed: " + result.message);
+      }
+    } catch (e) {
+      alert("❌ Network error during reset.");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   const showMain = screen !== "login" && screen !== "locked";
 
   return (
@@ -629,6 +649,31 @@ export default function App() {
                 }}
               >
                 {muted ? "🔇" : "🔊"}
+              </button>
+              <button
+                type="button"
+                className="admin-reset-button"
+                onClick={handleAdminReset}
+                disabled={resetting}
+                title="Reset all allocations"
+                style={{
+                  background: "#03577b",
+                  border: "2px solid #fff6ce",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "14px",
+                  boxShadow: "2px 2px 0 #fff6ce",
+                  marginLeft: "8px",
+                  cursor: resetting ? "not-allowed" : "pointer",
+                  color: "#fff6ce",
+                  opacity: resetting ? 0.6 : 1,
+                }}
+              >
+                {resetting ? "⏳" : "↺"}
               </button>
             </div>
           </div>
@@ -794,6 +839,17 @@ export default function App() {
       <footer>
         Organised by <b>Market Wizardz</b> <span>|</span> Faculty of Management, JLU
       </footer>
+
+      {/* Persistent Admin Reset Button in corner for testing */}
+      <button
+        type="button"
+        className="floating-reset-btn"
+        onClick={handleAdminReset}
+        disabled={resetting}
+        title="Reset all allocations in Google Sheet"
+      >
+        {resetting ? "⏳ Resetting..." : "↺ Reset Wheel"}
+      </button>
     </main>
   );
 }

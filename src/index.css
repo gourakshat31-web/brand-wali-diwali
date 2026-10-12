@@ -57,26 +57,28 @@ button:focus-visible, input:focus-visible { outline: 4px solid #ff800a; outline-
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  line-height: .82;
+  gap: 6px;
+  line-height: .88;
   white-space: nowrap;
+  max-width: 95%;
+  margin: 0 auto;
 }
 
 .title-lockup span {
   font-family: "Bowlby One", Impact, sans-serif;
-  font-size: clamp(42px, 8vw, 80px);
+  font-size: clamp(18px, 5.2vw, 32px);
   color: #fff;
-  letter-spacing: 1px;
-  -webkit-text-stroke: 3px #201516;
+  letter-spacing: 0px;
+  -webkit-text-stroke: 1.5px #201516;
   paint-order: stroke fill;
-  filter: drop-shadow(3px 4px 0 #201516);
+  filter: drop-shadow(2px 2px 0 #201516);
 }
 
 .title-lockup b {
   position: absolute;
   z-index: 2;
   color: #e31e4b;
-  font-size: clamp(26px, 5vw, 52px);
+  font-size: clamp(14px, 4.2vw, 24px);
   font-weight: 800;
   -webkit-text-stroke: 1px #fff6ce;
   transform: rotate(-8deg);
@@ -104,37 +106,102 @@ button:focus-visible, input:focus-visible { outline: 4px solid #ff800a; outline-
 .count-chip { background: #fff6ce; border: 2px solid #03577b; border-radius: 100px; padding: 8px 12px; font-size: 11px; font-weight: 600; box-shadow: 3px 3px 0 #03577b; }
 .count-chip i { display: inline-block; width: 7px; height: 7px; background: #ff800a; border-radius: 50%; margin-right: 4px; }
 
-.wheel-stage { position: relative; width: min(88vw, 390px); margin: 12px auto 0; aspect-ratio: 1; display: grid; place-items: center; }
-.wheel-wrap { width: 100%; height: 100%; position: relative; filter: drop-shadow(0 0 22px rgba(255, 128, 10, .68)); }
-.wheel { width: 100%; height: 100%; overflow: visible; }
-.wheel-rim { fill: #ffcf49; stroke: #720019; stroke-width: 9; }
-.wheel-slice { stroke: #720019; stroke-width: 2; }
-.wheel-label { font: 700 11px/1 "Poppins", sans-serif; letter-spacing: .2px; }
-.wheel-hub-outer { fill: #ffcf49; stroke: #720019; stroke-width: 4; }
-.wheel-hub { fill: #ff800a; stroke: #fff6ce; stroke-width: 3; }
-.pointer { position: absolute; z-index: 5; width: 42px; height: 58px; left: 50%; top: -17px; transform: translateX(-50%); filter: drop-shadow(0 4px 0 #720019); }
-.pointer::before { content: ""; position: absolute; border-left: 21px solid transparent; border-right: 21px solid transparent; border-top: 46px solid #ffcf49; }
-.pointer span { position: absolute; z-index: 2; width: 12px; height: 12px; background: #fff6ce; border-radius: 50%; left: 15px; top: 7px; }
+.wheel-stage {
+  position: relative;
+  width: min(88vw, 340px);
+  height: min(88vw, 340px);
+  margin: 10px auto 0;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wheel-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 22px rgba(255, 128, 10, .68));
+}
+.wheel {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pointer {
+  position: absolute;
+  z-index: 10;
+  width: 38px;
+  height: 52px;
+  left: 50%;
+  top: -12px;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 4px 0 #720019);
+  pointer-events: none;
+}
+.pointer::before {
+  content: "";
+  position: absolute;
+  border-left: 19px solid transparent;
+  border-right: 19px solid transparent;
+  border-top: 42px solid #ffcf49;
+}
+.pointer span {
+  position: absolute;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  background: #fff6ce;
+  border-radius: 50%;
+  left: 13px;
+  top: 6px;
+}
 
 .spin-button {
   position: absolute;
-  z-index: 6;
-  width: 105px;
-  height: 105px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: 4px solid #720019;
   background: #ff800a;
   color: #fff;
-  box-shadow: inset 0 0 0 4px #fff6ce, 0 0 24px rgba(255, 246, 206, .9), 0 7px 0 #720019;
+  box-shadow: inset 0 0 0 4px #fff6ce, 0 0 24px rgba(255, 246, 206, .9), 0 5px 0 #720019;
   font-family: "Bowlby One", Impact, sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: 1px;
   transition: transform .18s, filter .18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.spin-button:hover:not(:disabled) { transform: translateY(-2px) scale(1.04); filter: brightness(1.08); }
-.spin-button:active:not(:disabled) { transform: translateY(5px); box-shadow: inset 0 0 0 4px #fff6ce, 0 0 20px rgba(255,246,206,.8), 0 2px 0 #720019; }
+.spin-button:hover:not(:disabled) { transform: translate(-50%, -52%) scale(1.04); filter: brightness(1.08); }
+.spin-button:active:not(:disabled) { transform: translate(-50%, -48%); box-shadow: inset 0 0 0 4px #fff6ce, 0 0 20px rgba(255,246,206,.8), 0 2px 0 #720019; }
 .spin-button:disabled { cursor: wait; filter: saturate(.75); }
 .spin-button span { -webkit-text-stroke: 1px #720019; paint-order: stroke fill; }
+
+.admin-reset-button {
+  background: #720019;
+  color: #fff6ce;
+  border: 2px solid #fff6ce;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #03577b;
+  transition: transform 0.15s, background 0.15s;
+}
+.admin-reset-button:hover { background: #e31e4b; transform: scale(1.04); }
+.admin-reset-button:active { transform: scale(0.96); }
 .instruction { text-align: center; font-size: 12px; font-weight: 600; margin: 15px 0; color: #720019; }
 
 .is-spinning .wheel { filter: blur(1.2px); }
@@ -267,3 +334,33 @@ footer span { opacity: .55; margin: 0 3px; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
   .wheel { transition-duration: .01ms; }
 }
+
+.floating-reset-btn {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 9999;
+  background: #720019;
+  color: #fff6ce;
+  border: 2px solid #ffc21c;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.floating-reset-btn:hover {
+  background: #8e0020;
+  transform: scale(1.05);
+}
+.floating-reset-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
