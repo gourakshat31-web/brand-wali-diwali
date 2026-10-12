@@ -335,32 +335,12 @@ footer span { opacity: .55; margin: 0 3px; }
   .wheel { transition-duration: .01ms; }
 }
 
-.floating-reset-btn {
-  position: fixed;
-  bottom: 12px;
-  right: 12px;
-  z-index: 9999;
-  background: #720019;
-  color: #fff6ce;
-  border: 2px solid #ffc21c;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
-  transition: transform 0.15s, background 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.secret-diya-btn:hover {
+  opacity: 1 !important;
+  transform: scale(1.2);
 }
-.floating-reset-btn:hover {
-  background: #8e0020;
-  transform: scale(1.05);
+.secret-diya-btn:active {
+  transform: scale(0.9);
 }
-.floating-reset-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 

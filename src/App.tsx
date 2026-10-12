@@ -650,31 +650,6 @@ export default function App() {
               >
                 {muted ? "🔇" : "🔊"}
               </button>
-              <button
-                type="button"
-                className="admin-reset-button"
-                onClick={handleAdminReset}
-                disabled={resetting}
-                title="Reset all allocations"
-                style={{
-                  background: "#03577b",
-                  border: "2px solid #fff6ce",
-                  borderRadius: "50%",
-                  width: "32px",
-                  height: "32px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "14px",
-                  boxShadow: "2px 2px 0 #fff6ce",
-                  marginLeft: "8px",
-                  cursor: resetting ? "not-allowed" : "pointer",
-                  color: "#fff6ce",
-                  opacity: resetting ? 0.6 : 1,
-                }}
-              >
-                {resetting ? "⏳" : "↺"}
-              </button>
             </div>
           </div>
 
@@ -838,18 +813,36 @@ export default function App() {
 
       <footer>
         Organised by <b>Market Wizardz</b> <span>|</span> Faculty of Management, JLU
+        <button
+          type="button"
+          onClick={handleAdminReset}
+          disabled={resetting}
+          aria-label="Diwali Diya"
+          className="secret-diya-btn"
+          style={{
+            background: "transparent",
+            border: "none",
+            padding: "2px 4px",
+            margin: "0 0 0 5px",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            verticalAlign: "middle",
+            opacity: 0.8,
+          }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            style={{ display: "inline-block" }}
+          >
+            <path d="M12 2c.5 2 2.5 4 2.5 6a2.5 2.5 0 0 1-5 0c0-2 2-4 2.5-6Z" fill="#FF800A" />
+            <path d="M4 14c0 4.4 3.6 8 8 8s8-3.6 8-8H4Z" fill="#FFCF49" />
+            <path d="M7 14c1 2 2.5 3 5 3s4-1 5-3H7Z" fill="#E31E4B" />
+          </svg>
+        </button>
       </footer>
-
-      {/* Persistent Admin Reset Button in corner for testing */}
-      <button
-        type="button"
-        className="floating-reset-btn"
-        onClick={handleAdminReset}
-        disabled={resetting}
-        title="Reset all allocations in Google Sheet"
-      >
-        {resetting ? "⏳ Resetting..." : "↺ Reset Wheel"}
-      </button>
     </main>
   );
 }
