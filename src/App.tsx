@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { apiLogin, apiReset, apiSpin, apiStatus } from "./api";
-import { DEFAULT_CATEGORIES, PALETTE, TOTAL_TEAMS } from "./config";
+import {
+  DEFAULT_CATEGORIES,
+  PALETTE,
+  TOTAL_TEAMS,
+  getFullName,
+  getShortName,
+  splitCategoryForWheel,
+} from "./config";
 
 type Screen = "login" | "wheel" | "spinning" | "result" | "already" | "locked" | "error";
 
@@ -237,11 +244,11 @@ function Wheel({
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      const words = categories[i].split(" ");
+      const words = splitCategoryForWheel(categories[i]);
       const textRadius = count > 6 ? 96 : 90;
-      if (words.length > 1) {
+      if (words[1]) {
         ctx.fillText(words[0], textRadius, -7);
-        ctx.fillText(words.slice(1).join(" "), textRadius, 8);
+        ctx.fillText(words[1], textRadius, 8);
       } else {
         ctx.fillText(words[0], textRadius, 0);
       }
@@ -492,10 +499,17 @@ export default function App() {
     }
 
     const wonCategory = spinRes.category!;
+    const wonFull = getFullName(wonCategory).toLowerCase();
+    const wonShort = getShortName(wonCategory).toLowerCase();
     const currentCats = [...activeCategories];
-    let targetIndex = currentCats.findIndex(
-      (c) => c.trim().toLowerCase() === wonCategory.trim().toLowerCase()
-    );
+    let targetIndex = currentCats.findIndex((c) => {
+      const cLow = c.trim().toLowerCase();
+      return (
+        cLow === wonCategory.trim().toLowerCase() ||
+        getFullName(c).toLowerCase() === wonFull ||
+        getShortName(c).toLowerCase() === wonShort
+      );
+    });
 
     // If for any reason wonCategory is not in activeCategories, add it
     if (targetIndex === -1) {
@@ -740,7 +754,7 @@ export default function App() {
           <MarqueeCard className="result-modal">
             <Diya />
             <span className="eyebrow">YOUR CATEGORY IS</span>
-            <h2>{selectedCategory}</h2>
+            <h2>{getFullName(selectedCategory)}</h2>
             <p className="saved-note">
               <span>✓</span> Saved. Good luck!
             </p>
@@ -761,7 +775,7 @@ export default function App() {
               </svg>
             </div>
             <span className="eyebrow">YOU&apos;VE ALREADY SPUN</span>
-            <h2>{selectedCategory}</h2>
+            <h2>{getFullName(selectedCategory)}</h2>
             <p>
               Your challenge is saved. Now go build a pitch they can&apos;t forget.
             </p>

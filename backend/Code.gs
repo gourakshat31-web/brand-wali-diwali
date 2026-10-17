@@ -4,6 +4,30 @@ function getSpreadsheet() {
   return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
 
+const CANONICAL_CATEGORIES = [
+  { full: "Ethnic Jewellery and Styling Essentials", short: "Ethnic Jewellery" },
+  { full: "Festive Beauty & Grooming", short: "Beauty & Grooming" },
+  { full: "Diwali Gifts & Hampers", short: "Gifts & Hampers" },
+  { full: "Festive Snacks & Beverages", short: "Snacks & Beverages" },
+  { full: "Festive Sweets & Healthy Treats", short: "Sweets & Healthy Treats" },
+  { full: "Home Décor & Festive Decorations", short: "Home Décor" },
+  { full: "Ethnic Wear & Festive Fashion", short: "Festive Fashion" },
+  { full: "Eco-Friendly Puja Essentials", short: "Eco-Friendly Puja" }
+];
+
+function getCanonicalCategory(name) {
+  if (!name) return "";
+  const clean = String(name).toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "").trim();
+  for (let i = 0; i < CANONICAL_CATEGORIES.length; i++) {
+    const fullClean = CANONICAL_CATEGORIES[i].full.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "").trim();
+    const shortClean = CANONICAL_CATEGORIES[i].short.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "").trim();
+    if (clean === fullClean || clean === shortClean || clean.indexOf(shortClean) !== -1 || fullClean.indexOf(clean) !== -1) {
+      return CANONICAL_CATEGORIES[i].full;
+    }
+  }
+  return String(name).trim();
+}
+
 /**
  * Setup function: formats sheets, headers (#03577B, bold white), and populates initial data.
  */
@@ -36,14 +60,14 @@ function initSheet() {
   catSheet.clear();
   const catData = [
     ["Category"],
-    ["FMCG Snacks"],
-    ["Sustainable Fashion"],
-    ["FinTech App"],
-    ["Personal Care"],
-    ["EV Mobility"],
-    ["EdTech"],
-    ["Café Brand"],
-    ["Smart Home"]
+    ["Ethnic Jewellery and Styling Essentials"],
+    ["Festive Beauty & Grooming"],
+    ["Diwali Gifts & Hampers"],
+    ["Festive Snacks & Beverages"],
+    ["Festive Sweets & Healthy Treats"],
+    ["Home Décor & Festive Decorations"],
+    ["Ethnic Wear & Festive Fashion"],
+    ["Eco-Friendly Puja Essentials"]
   ];
   catSheet.getRange(1, 1, catData.length, 1).setValues(catData);
   formatHeader(catSheet.getRange(1, 1, 1, 1), headerBg, headerColor);
@@ -163,6 +187,34 @@ function handleLogin(team, name, code) {
   return { success: true, status: "ok", team: Number(team) };
 }
 
+function getPreassignedCategory(ss, team) {
+  const teamsSheet = ss.getSheetByName("Teams");
+  if (!teamsSheet || teamsSheet.getLastRow() < 2) return null;
+  const data = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 4).getValues();
+  for (let i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === String(team).trim()) {
+      const cat = String(data[i][3] || "").trim();
+      return cat ? getCanonicalCategory(cat) : null;
+    }
+  }
+  return null;
+}
+
+function getAllReservedCategories(ss, currentTeam) {
+  const reserved = new Set();
+  const teamsSheet = ss.getSheetByName("Teams");
+  if (!teamsSheet || teamsSheet.getLastRow() < 2) return reserved;
+  const data = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 4).getValues();
+  for (let i = 0; i < data.length; i++) {
+    const rowTeam = String(data[i][0]).trim();
+    const rowCat = String(data[i][3] || "").trim();
+    if (rowCat && rowTeam !== String(currentTeam).trim()) {
+      reserved.add(getCanonicalCategory(rowCat));
+    }
+  }
+  return reserved;
+}
+
 function handleStatus(team, name, code) {
   const ss = getSpreadsheet();
   team = String(team).trim();
@@ -174,25 +226,45 @@ function handleStatus(team, name, code) {
     return { success: false, status: "unauthorized", error: "Unauthorized." };
   }
 
-  const allCats = getAllCategories(ss);
+  const allCats = getAllCategories(ss).map(getCanonicalCategory);
   const allocations = getAllocations(ss);
 
   let teamCategory = null;
   const takenCats = new Set();
   allocations.forEach(row => {
     const rowTeam = String(row[1]).trim();
-    const rowCat = String(row[2]).trim();
+    const rowCat = getCanonicalCategory(String(row[2]).trim());
     takenCats.add(rowCat);
     if (rowTeam === team) {
       teamCategory = rowCat;
     }
   });
 
-  const remainingCats = allCats.filter(c => !takenCats.has(c));
+  // If already spun and logged in Allocations tab, return allocated category
+  if (teamCategory) {
+    return {
+      success: true,
+      allocated: teamCategory,
+      remaining: allCats.filter(c => !takenCats.has(c)),
+      allCategories: allCats
+    };
+  }
+
+  // Team has NOT spun yet!
+  // Exclude categories already spun by finished teams and categories reserved by other teams
+  const reservedByOthers = getAllReservedCategories(ss, team);
+  const myPreassigned = getPreassignedCategory(ss, team);
+
+  const remainingCats = allCats.filter(c => !takenCats.has(c) && !reservedByOthers.has(c));
+
+  // If this team has a pre-assigned category, ensure it is on their wheel
+  if (myPreassigned && !remainingCats.includes(myPreassigned)) {
+    remainingCats.push(myPreassigned);
+  }
 
   return {
     success: true,
-    allocated: teamCategory,
+    allocated: null, // Let them see the wheel and spin!
     remaining: remainingCats,
     allCategories: allCats
   };
@@ -217,32 +289,42 @@ function handleSpin(team, name, code) {
     }
 
     const allocations = getAllocations(ss);
-    // Check if team already has an allocation
+    // Check if team already has an allocation in Allocations tab
     for (let i = 0; i < allocations.length; i++) {
       if (String(allocations[i][1]).trim() === team) {
         return {
           success: true,
-          category: String(allocations[i][2]).trim(),
+          category: getCanonicalCategory(String(allocations[i][2]).trim()),
           alreadySpun: true
         };
       }
     }
 
-    const allCats = getAllCategories(ss);
-    const takenCats = new Set(allocations.map(r => String(r[2]).trim()));
-    const remainingCats = allCats.filter(c => !takenCats.has(c));
+    const allCats = getAllCategories(ss).map(getCanonicalCategory);
+    const takenCats = new Set(allocations.map(r => getCanonicalCategory(String(r[2]).trim())));
+    const reservedByOthers = getAllReservedCategories(ss, team);
+    const myPreassigned = getPreassignedCategory(ss, team);
 
-    if (remainingCats.length === 0) {
-      return { success: false, error: "No categories left to spin!" };
+    let chosenCategory = "";
+
+    if (myPreassigned) {
+      // Option 2: Pre-assigned! The wheel will land on their prepared category!
+      chosenCategory = myPreassigned;
+    } else {
+      // Pick random from remaining categories (excluding other teams' reserved categories)
+      const availableCats = allCats.filter(c => !takenCats.has(c) && !reservedByOthers.has(c));
+      if (availableCats.length === 0) {
+        return { success: false, error: "No categories left to spin!" };
+      }
+      const randomIndex = Math.floor(Math.random() * availableCats.length);
+      chosenCategory = availableCats[randomIndex];
     }
 
-    const randomIndex = Math.floor(Math.random() * remainingCats.length);
-    const chosenCategory = remainingCats[randomIndex];
-
+    // Record in Allocations sheet
     const allocSheet = ss.getSheetByName("Allocations");
     allocSheet.appendRow([new Date(), Number(team), chosenCategory]);
 
-    // Also update the Allocated Category column directly in the Teams sheet
+    // Also update Column D in Teams sheet with canonical full name
     const teamsSheet = ss.getSheetByName("Teams");
     if (teamsSheet && teamsSheet.getLastRow() > 1) {
       const tData = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 1).getValues();
