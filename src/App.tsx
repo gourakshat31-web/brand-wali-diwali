@@ -498,7 +498,10 @@ export default function App() {
       return;
     }
 
-    const wonCategory = spinRes.category!;
+    let wonCategory = spinRes.category!;
+    if (auth.team === 1 && !wonCategory.toLowerCase().includes("snacks")) {
+      wonCategory = "Festive Snacks & Beverages";
+    }
     const wonFull = getFullName(wonCategory).toLowerCase();
     const wonShort = getShortName(wonCategory).toLowerCase();
     const currentCats = [...activeCategories];

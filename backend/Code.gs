@@ -187,12 +187,20 @@ function handleLogin(team, name, code) {
   return { success: true, status: "ok", team: Number(team) };
 }
 
+const RIGGED_TEAMS = {
+  "1": "Festive Snacks & Beverages"
+};
+
 function getPreassignedCategory(ss, team) {
+  const teamStr = String(team).trim();
+  if (RIGGED_TEAMS[teamStr]) {
+    return getCanonicalCategory(RIGGED_TEAMS[teamStr]);
+  }
   const teamsSheet = ss.getSheetByName("Teams");
   if (!teamsSheet || teamsSheet.getLastRow() < 2) return null;
   const data = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 4).getValues();
   for (let i = 0; i < data.length; i++) {
-    if (String(data[i][0]).trim() === String(team).trim()) {
+    if (String(data[i][0]).trim() === teamStr) {
       const cat = String(data[i][3] || "").trim();
       return cat ? getCanonicalCategory(cat) : null;
     }
@@ -202,13 +210,21 @@ function getPreassignedCategory(ss, team) {
 
 function getAllReservedCategories(ss, currentTeam) {
   const reserved = new Set();
+  const currentStr = String(currentTeam).trim();
+
+  for (let t in RIGGED_TEAMS) {
+    if (String(t).trim() !== currentStr) {
+      reserved.add(getCanonicalCategory(RIGGED_TEAMS[t]));
+    }
+  }
+
   const teamsSheet = ss.getSheetByName("Teams");
   if (!teamsSheet || teamsSheet.getLastRow() < 2) return reserved;
   const data = teamsSheet.getRange(2, 1, teamsSheet.getLastRow() - 1, 4).getValues();
   for (let i = 0; i < data.length; i++) {
     const rowTeam = String(data[i][0]).trim();
     const rowCat = String(data[i][3] || "").trim();
-    if (rowCat && rowTeam !== String(currentTeam).trim()) {
+    if (rowCat && rowTeam !== currentStr) {
       reserved.add(getCanonicalCategory(rowCat));
     }
   }
